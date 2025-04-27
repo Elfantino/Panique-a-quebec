@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panique au Québec</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: linear-gradient(#FFB347, #FFCC33);
+      touch-action: none;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAeFBMVEUAAAD///+ZmZkWFhYcHBxeXl7u7u5aWlqFhYWZmZmMjIyhoaH8/Pzv7++GhobPz8+Li4vOzs6ampqOjo6JiYlAQEAZGRk9PT3X19d2dnaxsbGqqqqUlJQ3NzdJSUk0NDQjIyOLi4vX19eNjY2jo6NoaGh0dHQeHh7U1NRpaWlWVlZVVVVbW1vl6pgAAAGh0lEQVR4nO2da3uiOhCGFYSkBKmMiSRxOkEKi3v+/6wY5T2rJSyB+eU1zV1k93tJymJxvFkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPjX1hPz8PbB7lpPZ0pEvmtdlaR5DqIhNe2llX7GKbA7ltpA7lmP6mtmc95XTO2F/6V+8t1unefOmtf/qbWmnpG0XlbkLv8xP8thP8qwbEyd2f8bF/3mvx+wto3DjeYp2PXw2qUe7MZC6fwGmVLn5I8GpxRp9ZzPqZX9Otu0wvlLGnz7ZRm/OZk0Ho8I1JGpXxiYiH+4eWJcv3ph3/AKNQv/Nu04pnj7lhPPo1p0vWg+T8ao9hD/s+JdPZHP7j0xJ1JuVWpZ1b06iFWTOc0uJmY5L6ykL/TReX7/KFlctJuMr3bwTp7tmHD/X+zw04nJ0P8N2k6eYm/WL2ZdhH6x8jKpJ1MX13Y/V38XrcvDW3/WHfNL0ej8VflGo5fwvX0Z0Ut7G1wzvYzS0OXzq8fa6MN2ck8eNNX+9rPfQ7tTR6jMeiln8f+2rSbj7e5u/1cN2DqaTkxdm8rff9CvXTvn3s9+Ae+4U7sYGHF8sGzD0J1sifzExM4vxxbzZs6NdfHkNfIzU7xeHvK5fWcV5ZHT58m7j5i/kpUT3c38sfUl7Kcu3G74jP6mfTJnsv2xPr3GrO+GrjN4qMXCzq4+x2B+T8jsT8ck9ItxarKHko2f97GkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALy//gA4+2zjHtQ7NQAAAABJRU5ErkJggg==') no-repeat center center;
+      background-size: cover;
+    }
+    #mobile-controls {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+      z-index: 1000;
+    }
+    .btn {
+      width: 60px;
+      height: 60px;
+      margin: 10px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 50%;
+      font-size: 30px;
+      border: 2px solid #333;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="mobile-controls">
+  <button class="btn" id="left">◀️</button>
+  <button class="btn" id="jump">⤴️</button>
+  <button class="btn" id="right">▶️</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let player = {
+  x: 100,
+  y: canvas.height - 150,
+  vx: 0,
+  vy: 0,
+  width: 50,
+  height: 50,
+  speed: 5,
+  jumping: false
+};
+
+let gravity = 1;
+let ground = canvas.height - 100;
+
+let keys = {};
+
+document.addEventListener('keydown', e => keys[e.key] = true);
+document.addEventListener('keyup', e => keys[e.key] = false);
+
+// Touch controls
+document.getElementById('left').ontouchstart = () => keys['ArrowLeft'] = true;
+document.getElementById('left').ontouchend = () => keys['ArrowLeft'] = false;
+document.getElementById('right').ontouchstart = () => keys['ArrowRight'] = true;
+document.getElementById('right').ontouchend = () => keys['ArrowRight'] = false;
+document.getElementById('jump').ontouchstart = () => { 
+  if (!player.jumping) {
+    player.vy = -20;
+    player.jumping = true;
+  }
+};
+
+function drawPlayer() {
+  // Sprite de trappeur en base64
+  const img = new Image();
+  img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAkklEQVRoQ+2YsQ2AMAhEX/EjLUQVskFZskWbsk3y6V4kwKLiB0vDsoZmFi7tE3fOcO5+jHlOT2X3uTtJufV0a8dpHVr1iMRNNsRy9PT3AacXV52VXNpBzOwXfZw+28L6c2cNZf2RWnHWo0OEz8iOWy2DXmYIAXeZwBPB84BjwHzwHDgXP4BPi8cHT5NE1s+fAAAAAElFTkSuQmCC';
+  ctx.drawImage(img, player.x, player.y, player.width, player.height);
+}
+
+function update() {
+  if (keys['ArrowLeft']) player.vx = -player.speed;
+  else if (keys['ArrowRight']) player.vx = player.speed;
+  else player.vx = 0;
+
+  player.x += player.vx;
+  player.y += player.vy;
+  player.vy += gravity;
+
+  if (player.y > ground - player.height) {
+    player.y = ground - player.height;
+    player.vy = 0;
+    player.jumping = false;
+  }
+}
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  update();
+  drawPlayer();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
